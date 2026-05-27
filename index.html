@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>FRP复合材料工程安全产品电子图册</title>
+  <style>
+    :root {
+      --navy:#08294a;
+      --gold:#c99328;
+      --bg:#eef2f6;
+      --card:#ffffff;
+      --text:#172033;
+      --muted:#667085;
+      --shadow:0 22px 70px rgba(8, 41, 74, .24);
+    }
+    * { box-sizing:border-box; }
+    html, body {
+      margin:0;
+      min-height:100%;
+      background: radial-gradient(circle at top left, #ffffff 0, #eef4fb 38%, #dbe6f2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      color:var(--text);
+      overflow-x:hidden;
+    }
+    body { display:flex; flex-direction:column; }
+    header {
+      width:100%;
+      padding:16px 22px 10px;
+      display:flex;
+      justify-content:space-between;
+      gap:18px;
+      align-items:center;
+    }
+    .brand { display:flex; align-items:center; gap:12px; min-width:0; }
+    .mark {
+      width:38px; height:38px; border-radius:13px;
+      background:linear-gradient(135deg, var(--navy), #0c4778 70%);
+      box-shadow:0 8px 22px rgba(8,41,74,.28);
+      position:relative; flex:0 0 auto;
+    }
+    .mark::after { content:""; position:absolute; right:6px; top:6px; width:11px; height:11px; border-radius:50%; background:var(--gold); }
+    h1 {
+      font-size:18px;
+      line-height:1.18;
+      margin:0;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .subtitle { font-size:12px; color:var(--muted); margin-top:3px; }
+    .top-actions { display:flex; align-items:center; gap:9px; flex-wrap:wrap; justify-content:flex-end; }
+    button, a.btn {
+      border:0;
+      background:#fff;
+      color:var(--navy);
+      border:1px solid rgba(8,41,74,.14);
+      border-radius:999px;
+      padding:9px 13px;
+      font-weight:700;
+      cursor:pointer;
+      text-decoration:none;
+      box-shadow:0 4px 14px rgba(8,41,74,.08);
+      transition:.2s ease;
+      font-size:13px;
+      white-space:nowrap;
+    }
+    button:hover, a.btn:hover { transform:translateY(-1px); box-shadow:0 8px 18px rgba(8,41,74,.13); }
+    button.primary { background:var(--navy); color:#fff; border-color:var(--navy); }
+    main {
+      flex:1;
+      width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding:4px 20px 18px;
+    }
+    .stage {
+      width:min(96vw, 1180px);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+    }
+    .book-shell {
+      width:100%;
+      aspect-ratio:16/9;
+      max-height:calc(100vh - 176px);
+      min-height:260px;
+      background:linear-gradient(145deg, #ffffff, #edf2f7);
+      border-radius:22px;
+      padding:12px;
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+      perspective:1600px;
+      transform-origin:center center;
+      transition:transform .2s ease;
+    }
+    .book-shell::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      background:linear-gradient(90deg, rgba(255,255,255,.24), rgba(255,255,255,0) 12%, rgba(8,41,74,.08) 50%, rgba(255,255,255,0) 88%, rgba(255,255,255,.2));
+      pointer-events:none;
+      z-index:5;
+      mix-blend-mode:multiply;
+    }
+    .page-card {
+      position:absolute;
+      inset:12px;
+      border-radius:16px;
+      overflow:hidden;
+      background:#fff;
+      box-shadow:0 8px 24px rgba(15, 23, 42, .16);
+      backface-visibility:hidden;
+      transform-style:preserve-3d;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .page-card img { width:100%; height:100%; object-fit:contain; display:block; background:#fff; }
+    #currentPage { z-index:2; transform-origin:left center; }
+    #nextPage { z-index:1; opacity:0; transform-origin:right center; }
+    .flip-next-current { animation:flipNextCurrent .42s ease-in forwards; }
+    .flip-next-next { animation:flipNextNext .42s ease-out forwards; }
+    .flip-prev-current { transform-origin:right center !important; animation:flipPrevCurrent .42s ease-in forwards; }
+    .flip-prev-next { transform-origin:left center !important; animation:flipPrevNext .42s ease-out forwards; }
+    @keyframes flipNextCurrent { 0% { transform:rotateY(0deg); opacity:1; } 100% { transform:rotateY(-88deg); opacity:.25; } }
+    @keyframes flipNextNext { 0% { transform:rotateY(88deg); opacity:.35; } 100% { transform:rotateY(0deg); opacity:1; } }
+    @keyframes flipPrevCurrent { 0% { transform:rotateY(0deg); opacity:1; } 100% { transform:rotateY(88deg); opacity:.25; } }
+    @keyframes flipPrevNext { 0% { transform:rotateY(-88deg); opacity:.35; } 100% { transform:rotateY(0deg); opacity:1; } }
+    .arrow {
+      position:absolute;
+      top:50%; transform:translateY(-50%);
+      z-index:10;
+      width:44px; height:44px;
+      border-radius:50%;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(8,41,74,.16);
+      color:var(--navy);
+      font-size:26px;
+      display:grid;
+      place-items:center;
+      box-shadow:0 8px 24px rgba(8,41,74,.18);
+    }
+    .arrow.prev { left:18px; }
+    .arrow.next { right:18px; }
+    .controls {
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      padding:4px 2px 0;
+    }
+    .control-left, .control-right { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+    .page-indicator {
+      min-width:92px;
+      text-align:center;
+      color:#334155;
+      font-weight:800;
+      background:rgba(255,255,255,.72);
+      border:1px solid rgba(8,41,74,.10);
+      border-radius:999px;
+      padding:9px 14px;
+      box-shadow:0 6px 18px rgba(8,41,74,.08);
+    }
+    .progress {
+      width:100%;
+      height:8px;
+      border-radius:999px;
+      background:rgba(8,41,74,.12);
+      overflow:hidden;
+      margin-top:2px;
+    }
+    .bar { height:100%; width:0; background:linear-gradient(90deg, var(--gold), #d8ab53); border-radius:999px; transition:width .25s ease; }
+    .thumbs {
+      width:100%;
+      display:none;
+      grid-template-columns:repeat(auto-fill, minmax(120px,1fr));
+      gap:10px;
+      background:rgba(255,255,255,.68);
+      border:1px solid rgba(8,41,74,.10);
+      border-radius:18px;
+      padding:12px;
+      max-height:220px;
+      overflow:auto;
+      box-shadow:0 10px 25px rgba(8,41,74,.09);
+    }
+    .thumbs.show { display:grid; }
+    .thumb {
+      border:2px solid transparent;
+      border-radius:12px;
+      padding:5px;
+      background:#fff;
+      cursor:pointer;
+      box-shadow:0 4px 12px rgba(8,41,74,.08);
+    }
+    .thumb.active { border-color:var(--gold); }
+    .thumb img { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:8px; display:block; }
+    .thumb span { display:block; text-align:center; font-size:12px; font-weight:700; margin-top:4px; color:#475569; }
+    footer { text-align:center; color:#667085; font-size:12px; padding:4px 16px 14px; }
+    .hint { color:#667085; font-size:12px; text-align:center; margin-top:2px; }
+    @media (max-width: 720px) {
+      header { padding:12px 12px 6px; align-items:flex-start; flex-direction:column; gap:10px; }
+      h1 { font-size:16px; white-space:normal; }
+      main { padding:5px 10px 12px; }
+      .stage { width:100%; }
+      .book-shell { border-radius:16px; padding:7px; min-height:auto; max-height:none; }
+      .page-card { inset:7px; border-radius:11px; }
+      .arrow { width:38px; height:38px; font-size:22px; }
+      .arrow.prev { left:9px; } .arrow.next { right:9px; }
+      .controls { flex-direction:column; }
+      .control-left, .control-right { justify-content:center; }
+      button, a.btn { padding:8px 11px; font-size:12px; }
+    }
+    @media print { header, .controls, .progress, .thumbs, footer, .arrow { display:none !important; } .book-shell { box-shadow:none; width:100vw; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="mark"></div>
+      <div>
+        <h1>FRP复合材料工程安全产品电子图册</h1>
+        <div class="subtitle">衡水铭威科技有限公司｜电话：13831834948</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <a class="btn" href="assets/FRP_Product_Catalog.pdf" download>下载PDF</a>
+      <button id="fullscreenBtn">全屏浏览</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="stage">
+      <div id="bookShell" class="book-shell" aria-label="电子翻页图册">
+        <button class="arrow prev" id="prevArrow" aria-label="上一页">‹</button>
+        <div class="page-card" id="currentPage"><img id="currentImg" alt="当前页面"></div>
+        <div class="page-card" id="nextPage"><img id="nextImg" alt="下一页面"></div>
+        <button class="arrow next" id="nextArrow" aria-label="下一页">›</button>
+      </div>
+      <div class="progress"><div class="bar" id="progressBar"></div></div>
+      <div class="controls">
+        <div class="control-left">
+          <button id="prevBtn">上一页</button>
+          <button class="primary" id="nextBtn">下一页</button>
+          <span class="page-indicator" id="pageIndicator">1 / 14</span>
+        </div>
+        <div class="control-right">
+          <button id="zoomOutBtn">缩小</button>
+          <button id="zoomInBtn">放大</button>
+          <button id="resetZoomBtn">还原</button>
+          <button id="thumbBtn">目录缩略图</button>
+        </div>
+      </div>
+      <div class="hint">支持键盘 ← →、手机左右滑动、全屏浏览。</div>
+      <div class="thumbs" id="thumbs"></div>
+    </section>
+  </main>
+  <footer>本电子图册为离线HTML版：解压后双击 index.html 即可浏览，也可以上传到网站服务器生成在线链接。</footer>
+
+  <script>
+    const pages = [
+      "assets/page_01.png",
+      "assets/page_02.png",
+      "assets/page_03.png",
+      "assets/page_04.png",
+      "assets/page_05.png",
+      "assets/page_06.png",
+      "assets/page_07.png",
+      "assets/page_08.png",
+      "assets/page_09.png",
+      "assets/page_10.png",
+      "assets/page_11.png",
+      "assets/page_12.png",
+      "assets/page_13.png",
+      "assets/page_14.png"
+    ];
+    let current = 0;
+    let busy = false;
+    let zoom = 1;
+    const currentPage = document.getElementById('currentPage');
+    const nextPage = document.getElementById('nextPage');
+    const currentImg = document.getElementById('currentImg');
+    const nextImg = document.getElementById('nextImg');
+    const indicator = document.getElementById('pageIndicator');
+    const progressBar = document.getElementById('progressBar');
+    const bookShell = document.getElementById('bookShell');
+    const thumbs = document.getElementById('thumbs');
+
+    pages.forEach((src, i) => {
+      const t = document.createElement('div');
+      t.className = 'thumb';
+      t.innerHTML = `<img src="${src}" alt="第${i+1}页"><span>${i+1}</span>`;
+      t.onclick = () => goTo(i);
+      thumbs.appendChild(t);
+    });
+
+    function updateUI() {
+      currentImg.src = pages[current];
+      indicator.textContent = `${current + 1} / ${pages.length}`;
+      progressBar.style.width = `${((current + 1) / pages.length) * 100}%`;
+      document.querySelectorAll('.thumb').forEach((el, i) => el.classList.toggle('active', i === current));
+      document.getElementById('prevBtn').disabled = current === 0;
+      document.getElementById('nextBtn').disabled = current === pages.length - 1;
+      document.getElementById('prevArrow').style.display = current === 0 ? 'none' : 'grid';
+      document.getElementById('nextArrow').style.display = current === pages.length - 1 ? 'none' : 'grid';
+    }
+
+    function clearAnimationClasses() {
+      currentPage.className = 'page-card';
+      nextPage.className = 'page-card';
+      nextPage.style.opacity = 0;
+      currentPage.style.opacity = 1;
+    }
+
+    function flipTo(target, direction='next') {
+      if (busy || target < 0 || target >= pages.length || target === current) return;
+      busy = true;
+      nextImg.src = pages[target];
+      clearAnimationClasses();
+      if (direction === 'next') {
+        currentPage.classList.add('flip-next-current');
+        nextPage.classList.add('flip-next-next');
+      } else {
+        currentPage.classList.add('flip-prev-current');
+        nextPage.classList.add('flip-prev-next');
+      }
+      setTimeout(() => {
+        current = target;
+        clearAnimationClasses();
+        updateUI();
+        busy = false;
+      }, 430);
+    }
+
+    function next() { flipTo(current + 1, 'next'); }
+    function prev() { flipTo(current - 1, 'prev'); }
+    function goTo(index) {
+      const direction = index > current ? 'next' : 'prev';
+      flipTo(index, direction);
+    }
+    function setZoom(v) {
+      zoom = Math.max(.75, Math.min(1.6, v));
+      bookShell.style.transform = `scale(${zoom})`;
+      bookShell.style.margin = zoom > 1 ? `${(zoom-1)*160}px 0` : '0';
+    }
+
+    document.getElementById('nextBtn').onclick = next;
+    document.getElementById('prevBtn').onclick = prev;
+    document.getElementById('nextArrow').onclick = next;
+    document.getElementById('prevArrow').onclick = prev;
+    document.getElementById('zoomInBtn').onclick = () => setZoom(zoom + .1);
+    document.getElementById('zoomOutBtn').onclick = () => setZoom(zoom - .1);
+    document.getElementById('resetZoomBtn').onclick = () => setZoom(1);
+    document.getElementById('thumbBtn').onclick = () => thumbs.classList.toggle('show');
+    document.getElementById('fullscreenBtn').onclick = () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+      else document.exitFullscreen?.();
+    };
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight') next();
+      if (e.key === 'ArrowLeft') prev();
+      if (e.key === 'Escape') setZoom(1);
+    });
+    let startX = 0, startY = 0;
+    bookShell.addEventListener('touchstart', e => {
+      startX = e.changedTouches[0].screenX;
+      startY = e.changedTouches[0].screenY;
+    }, {passive:true});
+    bookShell.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].screenX - startX;
+      const dy = e.changedTouches[0].screenY - startY;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
+        dx < 0 ? next() : prev();
+      }
+    }, {passive:true});
+    updateUI();
+  </script>
+</body>
+</html>
